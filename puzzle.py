@@ -1,0 +1,504 @@
+
+from flask import Flask, render_template_string
+import random
+import json
+import threading
+import webbrowser
+
+app = Flask(__name__)
+
+WORDS = [
+"مدرسة","حديقة","حاسوب","مكتبة","سيارة","طائرة","سفينة","شجرة","زهرة","عصفور",
+"فراشة","سلحفاة","أرنب","حصان","جمل","أسد","نمر","غزال","دلفين","بطريق",
+"تفاحة","برتقال","موز","عنب","ليمون","بطيخ","فراولة","كرز","خوخ","كمثرى",
+"قلم","دفتر","كتاب","مسطرة","حقيبة","ممحاة","مكتب","كرسي","نافذة","باب",
+"مصباح","ساعة","هاتف","شاشة","كاميرا","مفتاح","مرآة","وسادة","بطانية","سجادة",
+"بحر","نهر","جبل","صحراء","غابة","جزيرة","سماء","نجمة","قمر","شمس",
+"سحابة","مطر","ثلج","رياح","بركان","ملعب","مستشفى","مطار","محطة","مدينة",
+"قرية","شارع","جسر","قصر","مسجد","متحف","مخبز","مطعم","سوق","طبيب",
+"مهندس","معلم","طيار","نجار","مزارع","رسام","كاتب","شرطي","بحار","رياضة",
+"سباحة","كرة","تنس","جري","قراءة","كتابة","رسم","تصوير","موسيقى","ذكاء",
+"ذاكرة","معرفة","تفكير","خيال","صداقة","تعاون","شجاعة","أمانة","احترام","حاسبة",
+"روبوت","إنترنت","برمجة","تطبيق","معلومات","بيانات","لوحة","طابعة","سماعة","مطرقة",
+"مفك","منشار","مقص","إبرة","ملعقة","شوكة","سكين","صحن","كوب","ثلاجة",
+"غسالة","فرن","مروحة","مكنسة","قطار","حافلة","دراجة","شاحنة","قارب","مظلة",
+"قبعة","حذاء","قميص","معطف","سروال","جوارب","خاتم","قلادة","ماء","حليب",
+"عصير","عسل","خبز","جبن","أرز","تمر","بيض","سمك","دجاج","لحم",
+"شوربة","سلطة","حلوى","صباح","مساء","ليل","نهار","ربيع","صيف","خريف",
+"شتاء","أسبوع","شهر","دقيقة","ثانية","تاريخ","مستقبل","ماضي","وطن","عائلة",
+"صديق","أخلاق","نجاح","هدف","حلم","رحلة","مغامرة","اكتشاف","كنز","خريطة",
+"كهف","قلعة","ساحل","محيط","شلال","واحة","رمال","صخور","مكتشف","مخترع",
+"بطارية","محرك","مصنع","مزرعة","مزراب","مركب","منطاد","مسبح","مسرح","سينما",
+"مجرة","كوكب","مذنب","فضاء","تلسكوب","مجهر","ذرة","طاقة","كهرباء","حرارة"
+]
+
+HTML = r"""
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مغامرة الكلمات</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Tahoma, Arial, sans-serif;
+    color: white;
+    text-align: center;
+    background: linear-gradient(#102b50, #246b83 55%, #d19a55);
+    overflow-x: hidden;
+}
+header {
+    padding: 16px 10px 5px;
+    position: relative;
+    z-index: 2;
+}
+h1 {
+    color: #ffe18a;
+    font-size: clamp(25px, 6vw, 42px);
+    margin: 8px;
+    text-shadow: 0 3px 10px #0008;
+}
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 12px;
+}
+.stat {
+    background: #102d4ddd;
+    border: 1px solid #ffffff55;
+    border-radius: 15px;
+    padding: 10px 18px;
+    font-size: 18px;
+}
+#scene {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+}
+.game {
+    position: relative;
+    z-index: 1;
+    width: min(94%, 720px);
+    margin: 10px auto 35px;
+    padding: 20px 14px;
+    background: #102743dd;
+    border: 1px solid #ffffff55;
+    border-radius: 25px;
+    box-shadow: 0 15px 45px #0007;
+}
+.instructions {
+    color: #e4f5ff;
+    font-size: 18px;
+    margin: 5px 0 18px;
+}
+#answer {
+    min-height: 75px;
+    padding: 14px 8px;
+    margin: 12px auto 20px;
+    border-radius: 16px;
+    background: #ffffff18;
+    border: 2px dashed #ffda77;
+    font-size: 34px;
+    letter-spacing: 5px;
+    direction: rtl;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+#letters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 65px;
+    direction: rtl;
+    margin: 15px 0;
+}
+.letter {
+    width: 54px;
+    height: 58px;
+    border: 0;
+    border-radius: 13px;
+    background: linear-gradient(145deg, #ffe49b, #e9a83e);
+    color: #38230c;
+    font-size: 27px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #9a6423;
+    transition: transform .15s;
+}
+.letter:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #9a6423;
+}
+.letter:disabled {
+    opacity: .25;
+    cursor: default;
+}
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.action {
+    border: 0;
+    border-radius: 13px;
+    padding: 13px 19px;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #2778c4;
+    box-shadow: 0 4px 0 #164b7c;
+}
+.action:active { transform: translateY(3px); box-shadow: none; }
+.hint { background: #d58a22; box-shadow: 0 4px 0 #895313; }
+.check { background: #25965e; box-shadow: 0 4px 0 #12603a; }
+.reset { background: #66758e; box-shadow: 0 4px 0 #35445c; }
+#message {
+    min-height: 35px;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 17px;
+}
+#next {
+    display: none;
+    background: #16a66b;
+    box-shadow: 0 4px 0 #08633e;
+}
+footer {
+    color: #fff;
+    padding: 12px;
+    font-size: 13px;
+}
+@media(max-width:450px) {
+    .letter { width: 45px; height: 52px; font-size: 23px; }
+    .action { padding: 11px 13px; font-size: 15px; }
+    .game { padding: 16px 8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="scene"></div>
+
+<header>
+    <h1>🐪 مغامرة الكلمات 🏜️</h1>
+    <div class="stats">
+        <div class="stat" id="stage">المرحلة: 1 / 200</div>
+        <div class="stat" id="coins">🪙 العملات: 10</div>
+    </div>
+</header>
+
+<main class="game">
+    <div class="instructions">رتّب الحروف المبعثرة واكتشف الكلمة الصحيحة!</div>
+    <div id="answer">؟</div>
+    <div id="letters"></div>
+
+    <div class="actions">
+        <button class="action hint" onclick="useHint()">💡 تلميح (3 عملات)</button>
+        <button class="action reset" onclick="resetWord()">إعادة</button>
+        <button class="action check" onclick="checkAnswer()">تحقق</button>
+        <button class="action" id="next" onclick="nextStage()">المرحلة التالية ←</button>
+    </div>
+
+    <div id="message"></div>
+</main>
+
+<footer>لعبة مغامرة الكلمات — اختبر ذاكرتك وذكاءك!</footer>
+
+<script>
+const words = WORDS_PLACEHOLDER;
+
+let stage = 0;
+let coins = 10;
+let answer = [];
+let scrambled = [];
+let completed = false;
+let hintUsed = [];
+
+const answerBox = document.getElementById("answer");
+const lettersBox = document.getElementById("letters");
+const message = document.getElementById("message");
+const nextButton = document.getElementById("next");
+
+function shuffle(array) {
+    let a = [...array];
+    for (let i = a.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function updateStats() {
+    document.getElementById("stage").textContent =
+        `المرحلة: ${stage + 1} / ${words.length}`;
+    document.getElementById("coins").textContent =
+        `🪙 العملات: ${coins}`;
+}
+
+function startStage() {
+    completed = false;
+    nextButton.style.display = "none";
+    message.textContent = "";
+    message.style.color = "white";
+
+    answer = [];
+    hintUsed = [];
+
+    const word = Array.from(words[stage]);
+    scrambled = shuffle(word);
+
+    if (scrambled.join("") === word.join("") && word.length > 1) {
+        scrambled = [...scrambled.slice(1), scrambled[0]];
+    }
+
+    draw();
+    updateStats();
+}
+
+function draw() {
+    answerBox.innerHTML = "";
+    lettersBox.innerHTML = "";
+
+    if (answer.length === 0) {
+        answerBox.textContent = "رتّب الحروف هنا";
+        answerBox.style.color = "#d8eaff";
+        answerBox.style.fontSize = "20px";
+    } else {
+        answerBox.style.color = "white";
+        answerBox.style.fontSize = "34px";
+        answer.forEach(item => {
+            const span = document.createElement("span");
+            span.textContent = item.letter;
+            answerBox.appendChild(span);
+        });
+    }
+
+    scrambled.forEach((letter, index) => {
+        const button = document.createElement("button");
+        button.className = "letter";
+        button.textContent = letter;
+        button.disabled = letter === null || completed;
+        button.onclick = () => selectLetter(index);
+        lettersBox.appendChild(button);
+    });
+}
+
+function selectLetter(index) {
+    if (completed || scrambled[index] === null) return;
+
+    answer.push({
+        letter: scrambled[index],
+        index: index
+    });
+    scrambled[index] = null;
+    draw();
+}
+
+function resetWord() {
+    if (completed) return;
+    startStage();
+}
+
+function checkAnswer() {
+    if (completed) return;
+
+    const word = words[stage];
+    const attempt = answer.map(x => x.letter).join("");
+
+    if (attempt === word) {
+        completed = true;
+        coins += 1;
+        updateStats();
+        message.textContent = "🎉 أحسنت! إجابة صحيحة، ربحت عملة!";
+        message.style.color = "#8dffad";
+        nextButton.style.display = "inline-block";
+        draw();
+    } else {
+        message.textContent = "❌ ليست صحيحة، جرّب ترتيب الحروف مرة أخرى";
+        message.style.color = "#ffd18b";
+    }
+}
+
+function useHint() {
+    if (completed) return;
+
+    if (coins < 3) {
+        message.textContent = "ليس لديك ما يكفي من العملات!";
+        message.style.color = "#ffd18b";
+        return;
+    }
+
+    const correct = Array.from(words[stage]);
+    const position = answer.length;
+
+    if (position >= correct.length) return;
+
+    const needed = correct[position];
+    const index = scrambled.findIndex(x => x === needed);
+
+    if (index === -1) {
+        message.textContent = "لا يمكن إيجاد الحرف المطلوب.";
+        return;
+    }
+
+    coins -= 3;
+    answer.push({letter: scrambled[index], index: index});
+    scrambled[index] = null;
+
+    updateStats();
+    message.textContent = "💡 كشفنا لك حرفاً واحداً";
+    message.style.color = "#ffe18a";
+    draw();
+
+    if (answer.length === correct.length) {
+        checkAnswer();
+    }
+}
+
+function nextStage() {
+    if (!completed) return;
+
+    if (stage < words.length - 1) {
+        stage++;
+        startStage();
+        document.querySelector(".game").animate(
+            [
+                {transform: "translateY(30px) rotateX(8deg)", opacity: 0},
+                {transform: "translateY(0) rotateX(0)", opacity: 1}
+            ],
+            {duration: 500, easing: "ease-out"}
+        );
+    } else {
+        message.textContent = "🏆 مذهل! لقد أكملت جميع المراحل!";
+        nextButton.style.display = "none";
+    }
+}
+
+startStage();
+</script>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+const container = document.getElementById("scene");
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x75b9dc);
+scene.fog = new THREE.Fog(0x75b9dc, 25, 75);
+
+const camera = new THREE.PerspectiveCamera(
+    60, window.innerWidth / window.innerHeight, 0.1, 100
+);
+camera.position.set(0, 8, 18);
+camera.lookAt(0, 2, 0);
+
+const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x9b713e, 2));
+
+const sun = new THREE.DirectionalLight(0xffffff, 2);
+sun.position.set(-8, 15, 8);
+scene.add(sun);
+
+// أرض الصحراء
+const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(150, 150),
+    new THREE.MeshStandardMaterial({color: 0xc99a5b})
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.3;
+scene.add(ground);
+
+// أهرامات
+function pyramid(x, z, size, color) {
+    const mesh = new THREE.Mesh(
+        new THREE.ConeGeometry(size, size * 1.4, 4),
+        new THREE.MeshStandardMaterial({color: color})
+    );
+    mesh.position.set(x, size * 0.65 - 0.3, z);
+    mesh.rotation.y = Math.PI / 4;
+    scene.add(mesh);
+}
+pyramid(-12, -8, 6, 0xb87b42);
+pyramid(12, -10, 8, 0xa86e39);
+pyramid(-18, -20, 10, 0xc28a4a);
+
+// جمل مبسط
+const camel = new THREE.Group();
+const sand = new THREE.MeshStandardMaterial({color: 0xb87a38});
+
+function part(geometry, x, y, z, sx, sy, sz) {
+    const mesh = new THREE.Mesh(geometry, sand);
+    mesh.position.set(x, y, z);
+    mesh.scale.set(sx, sy, sz);
+    camel.add(mesh);
+}
+
+part(new THREE.SphereGeometry(1, 20, 16), 0, 1.5, 0, 1.7, 0.8, 0.7);
+part(new THREE.SphereGeometry(1, 20, 16), 0.9, 2.5, 0, 0.35, 1.2, 0.35);
+part(new THREE.SphereGeometry(1, 20, 16), 1.2, 3.4, 0, 0.65, 0.5, 0.4);
+part(new THREE.SphereGeometry(1, 20, 16), -0.2, 2.2, 0, 0.6, 0.7, 0.6);
+
+for (const x of [-1, -0.3, 0.7, 1.2]) {
+    part(new THREE.CylinderGeometry(0.12, 0.16, 1.1, 10),
+         x, 0.65, 0, 1, 1, 1);
+}
+
+camel.position.set(6, 0, 2);
+camel.scale.set(0.9, 0.9, 0.9);
+scene.add(camel);
+
+// صخور وزينة
+for (let i = 0; i < 35; i++) {
+    const rock = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(Math.random() * 0.5 + 0.2),
+        new THREE.MeshStandardMaterial({color: 0x99734d})
+    );
+    rock.position.set(
+        (Math.random() - 0.5) * 45,
+        0,
+        (Math.random() - 0.5) * 40
+    );
+    scene.add(rock);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    camel.rotation.y = Math.sin(Date.now() * 0.0004) * 0.08;
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
+"""
+
+HTML = HTML.replace("WORDS_PLACEHOLDER", json.dumps(WORDS, ensure_ascii=False))
+
+@app.route("/")
+def home():
+    return render_template_string(HTML)
+
+if __name__ == "__main__":
+    threading.Timer(1.2, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
+    app.run(host="0.0.0.0", port=5000, debug=False)
