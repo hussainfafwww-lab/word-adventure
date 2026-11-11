@@ -1,147 +1,801 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#102b50">
+<meta name="theme-color" content="#101735">
 <title>مغامرة الكلمات</title>
+
 <style>
-:root{--gold:#ffd879;--blue:#102b50;--glass:#102743d9}
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;color:#fff;font-family:Tahoma,Arial,sans-serif;text-align:center;overflow-x:hidden;background:#102b50}
-#world{position:fixed;inset:0;z-index:-2;overflow:hidden;background:linear-gradient(#102b50 0%,#286c83 52%,#d49b5d 100%)}
-.skyglow{position:absolute;width:70vw;height:70vw;max-width:600px;max-height:600px;border-radius:50%;background:#ffe7a0;filter:blur(70px);opacity:.17;top:-35%;left:8%}
-.moon{position:absolute;top:8%;left:12%;width:58px;height:58px;border-radius:50%;background:#fff0bd;box-shadow:0 0 55px #fff0bd88}
-.mountain{position:absolute;bottom:0;width:0;height:0;border-left:45vw solid transparent;border-right:45vw solid transparent;border-bottom:45vh solid #183d4d;opacity:.85}
-.m1{left:-22vw}.m2{right:-20vw;border-bottom-color:#245b60;border-bottom-width:35vh}
-.castle{position:absolute;bottom:18vh;left:50%;transform:translateX(-50%);width:170px;height:130px;background:#72513d;border:5px solid #9d7953;clip-path:polygon(0 25%,15% 25%,15% 0,30% 0,30% 25%,70% 25%,70% 0,85% 0,85% 25%,100% 25%,100% 100%,0 100%);opacity:.8}
-.water{position:absolute;bottom:0;left:0;width:100%;height:17vh;background:linear-gradient(#4b9da0,#164d68);opacity:.75;animation:water 5s ease-in-out infinite alternate}
-@keyframes water{to{filter:brightness(1.25);transform:scaleY(1.08)}}
-header{position:relative;padding:12px 10px 4px}
-h1{margin:6px;color:var(--gold);font-size:clamp(25px,6vw,38px);text-shadow:0 3px 12px #0009}
-.stats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px}
-.stat{background:#102743d9;border:1px solid #ffffff55;border-radius:14px;padding:8px 13px;font-size:16px}
-main{position:relative;width:min(94%,520px);margin:10px auto 25px;padding:15px 12px 18px;background:var(--glass);border:1px solid #ffffff55;border-radius:24px;box-shadow:0 15px 45px #0007;backdrop-filter:blur(7px)}
-.sub{color:#d8efff;margin:4px 0 12px;font-size:15px}
-#found{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;min-height:54px;margin:8px 0 12px}
-.word{padding:7px 11px;border-radius:10px;background:#1e865d;border:1px solid #a7ffd0;font-size:18px}
-#progress{color:#ffe9a7;font-size:14px;margin-bottom:10px}
-#answer{min-height:50px;border:1px dashed #ffda77;border-radius:14px;background:#ffffff14;display:flex;align-items:center;justify-content:center;font-size:25px;letter-spacing:3px;margin:10px 0}
-#letterRing{position:relative;width:min(78vw,300px);height:min(78vw,300px);margin:8px auto 12px;border-radius:50%;touch-action:none}
-.node{position:absolute;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#fff0b2,#e7a53b);color:#38230c;font-size:25px;font-weight:bold;box-shadow:0 5px 0 #93601f,0 6px 15px #0005;transform:translate(-50%,-50%);user-select:none;touch-action:none}
-.node.used{filter:brightness(1.2);outline:3px solid #8fffc2}
-#trace{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}
-button{font-family:inherit}
-.action{border:0;border-radius:12px;padding:11px 13px;color:white;font-size:15px;font-weight:bold;background:#2878bd;box-shadow:0 4px 0 #164b7c}
-.action:active{transform:translateY(3px);box-shadow:none}
-.gold{background:#d58a22;box-shadow:0 4px 0 #895313}
-.green{background:#23965e;box-shadow:0 4px 0 #12603a}
-.purple{background:#7656b5;box-shadow:0 4px 0 #49347a}
-#message{min-height:28px;margin-top:12px;font-weight:bold;color:#ffe9a7}
-#wheelPanel{margin:12px auto 5px;padding:12px;border-radius:17px;background:#ffffff12;border:1px solid #ffffff30}
-#wheel{width:190px;height:190px;border-radius:50%;margin:8px auto;background:conic-gradient(#f3c65c 0 20%,#e88b4b 20% 40%,#75b9a5 40% 60%,#7b8fd0 60% 80%,#b58ad6 80% 100%);border:5px solid #ffe7a1;position:relative;box-shadow:0 5px 20px #0006;transition:transform 3.5s cubic-bezier(.12,.75,.18,1)}
-#wheel:after{content:"";position:absolute;inset:38%;background:#fff4cf;border-radius:50%;border:3px solid #9b692e}
-.wlabels{position:absolute;inset:0;pointer-events:none}
-.wlabels span{position:absolute;left:50%;top:50%;width:72px;margin-left:-36px;margin-top:-9px;font-size:12px;font-weight:bold;color:#392a21;text-shadow:0 1px #fff8}
-.wlabels span:nth-child(1){transform:translateY(-70px)}
-.wlabels span:nth-child(2){transform:rotate(72deg) translateY(-70px) rotate(-72deg)}
-.wlabels span:nth-child(3){transform:rotate(144deg) translateY(-70px) rotate(-144deg)}
-.wlabels span:nth-child(4){transform:rotate(216deg) translateY(-70px) rotate(-216deg)}
-.wlabels span:nth-child(5){transform:rotate(288deg) translateY(-70px) rotate(-288deg)}
-.pointer{width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-top:22px solid #fff;position:relative;margin:0 auto -20px;z-index:2;filter:drop-shadow(0 2px 2px #000)}
-.small{font-size:12px;color:#d6e9f6}
-@media(max-width:380px){.node{width:48px;height:48px;font-size:22px}.stat{font-size:14px;padding:7px 9px}.action{font-size:14px;padding:10px}}
+:root {
+  --gold: #ffd76b;
+  --cyan: #7de8ef;
+  --panel: #17264ddd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #fff;
+  font-family: Tahoma, Arial, sans-serif;
+  background: radial-gradient(
+    ellipse at 50% 5%,
+    #354d83 0,
+    #18264d 43%,
+    #090f25 100%
+  );
+  overflow-x: hidden;
+}
+
+body:before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(#fff9 1px, transparent 1px),
+    radial-gradient(#b8eaff99 1px, transparent 1px);
+  background-size: 57px 57px, 91px 91px;
+  background-position: 0 0, 24px 32px;
+  animation: stars 18s linear infinite;
+}
+
+@keyframes stars {
+  to {
+    background-position: 57px 57px, -67px 123px;
+  }
+}
+
+header {
+  max-width: 620px;
+  margin: auto;
+  padding: 20px 16px 8px;
+  text-align: center;
+}
+
+h1 {
+  margin: 5px 0;
+  color: var(--gold);
+  font-size: clamp(27px, 7vw, 38px);
+  text-shadow: 0 3px 16px #ffbf4b66;
+}
+
+.sub {
+  color: #c7d8f5;
+  font-size: 13px;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 14px auto;
+}
+
+.pill {
+  background: #18294fe8;
+  border: 1px solid #7eaddb66;
+  border-radius: 30px;
+  padding: 9px 14px;
+  box-shadow: 0 5px 18px #0003;
+  font-weight: bold;
+}
+
+.pill b {
+  color: var(--gold);
+}
+
+main {
+  width: min(94%, 520px);
+  margin: 0 auto 28px;
+}
+
+.panel {
+  background: linear-gradient(145deg, #1a3155ef, #111d3def);
+  border: 1px solid #8ac8ef55;
+  border-radius: 24px;
+  padding: 17px;
+  box-shadow:
+    0 16px 40px #0005,
+    inset 0 1px #ffffff18;
+  margin: 12px 0;
+}
+
+.levelline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #d9e9ff;
+  font-size: 14px;
+}
+
+.progress {
+  height: 8px;
+  background: #07132d;
+  border-radius: 20px;
+  margin: 10px 0 5px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #64e9ed, #ffe17b);
+  border-radius: 20px;
+  transition: width .3s;
+}
+
+.hint {
+  color: #bdd3f2;
+  text-align: center;
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+
+.wheel-wrap {
+  width: 220px;
+  height: 220px;
+  margin: 12px auto 16px;
+  position: relative;
+}
+
+.wheel {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 7px solid #ffe8a4;
+  box-shadow:
+    0 0 0 4px #9b6c31,
+    0 10px 30px #0008;
+  background: conic-gradient(
+    #df6c54 0 20%,
+    #325d9d 20% 40%,
+    #2c9b88 40% 60%,
+    #7454a8 60% 80%,
+    #b88732 80% 100%
+  );
+  transition: transform 3.5s cubic-bezier(.12,.72,.12,1);
+}
+
+.wheel:after {
+  content: "";
+  position: absolute;
+  inset: 43%;
+  background: #fff0;
+  border: 5px solid #ffe8a4;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #16254a;
+}
+
+.wheel-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wheel-labels span {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 2px 3px #000;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  text-align: center;
+  transform-origin: center;
+}
+
+.pointer {
+  position: absolute;
+  z-index: 2;
+  left: calc(50% - 13px);
+  top: -12px;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-top: 27px solid #fff2a8;
+  filter: drop-shadow(0 3px 3px #000);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 15px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #17213b;
+  background: linear-gradient(180deg, #ffe89b, #eebc55);
+  box-shadow: 0 4px 0 #a8792c;
+  cursor: pointer;
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #a8792c;
+}
+
+button.secondary {
+  background: linear-gradient(180deg, #9debf0, #52b9ce);
+  box-shadow: 0 4px 0 #267d94;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.wheel-actions,
+.tools {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.board {
+  position: relative;
+  width: min(78vw, 310px);
+  height: min(78vw, 310px);
+  margin: 5px auto 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #263f68 0,
+    #172b50 56%,
+    #0b1733 72%
+  );
+  border: 1px solid #9adff455;
+  box-shadow:
+    inset 0 0 35px #0008,
+    0 10px 28px #0004;
+  touch-action: none;
+}
+
+.letter {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 27px;
+  font-weight: bold;
+  color: #17213b;
+  background: linear-gradient(145deg, #fff3c4, #e7ad50);
+  border: 3px solid #fff1c2;
+  box-shadow:
+    0 5px 0 #98682c,
+    0 8px 15px #0006;
+  transform: translate(-50%, -50%);
+  user-select: none;
+  touch-action: none;
+}
+
+.letter.selected {
+  background: linear-gradient(145deg, #c4fbff, #65d7df);
+  box-shadow:
+    0 0 0 5px #6ce9ed55,
+    0 5px 0 #287f8d;
+}
+
+.current {
+  height: 39px;
+  text-align: center;
+  font-size: 25px;
+  letter-spacing: 5px;
+  color: #fff2ae;
+  font-weight: bold;
+  margin: 4px;
+}
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  min-height: 42px;
+}
+
+.word {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #29476b;
+  border: 1px solid #8bc8db66;
+  color: #e7f8ff;
+  font-weight: bold;
+}
+
+.word.new {
+  animation: pop .4s ease;
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.12);
+    background: #287c76;
+  }
+}
+
+.tools {
+  margin-top: 15px;
+}
+
+.message {
+  text-align: center;
+  min-height: 22px;
+  color: #a8f0df;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.levels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.level {
+  padding: 9px 0;
+  background: #20385c;
+  color: #e8f2ff;
+  box-shadow: none;
+  border: 1px solid #7295ba55;
+}
+
+.level.done {
+  background: #286c65;
+}
+
+.level.active {
+  outline: 2px solid var(--gold);
+}
+
+footer {
+  text-align: center;
+  color: #8da5c8;
+  font-size: 11px;
+  padding: 5px 12px 25px;
+}
+
+@media(max-width:370px) {
+  .letter {
+    width: 55px;
+    height: 55px;
+  }
+
+  .panel {
+    padding: 13px;
+  }
+
+  .wheel-wrap {
+    width: 200px;
+    height: 200px;
+  }
+}
 </style>
-</head>
-<body>
-<div id="world"><div class="skyglow"></div><div class="moon"></div><div class="mountain m1"></div><div class="mountain m2"></div><div class="castle"></div><div class="water"></div></div>
-<header>
-<h1>✨ مغامرة الكلمات ✨</h1>
-<div class="stats"><div class="stat" id="stageStat"></div><div class="stat" id="starsStat">⭐ النجوم: 10</div></div>
-</header>
-<main>
-<div class="sub">اسحب إصبعك بين الحروف لتكوين كلمات المرحلة</div>
-<div id="progress"></div>
-<div id="found"></div>
-<div id="answer">ابدأ السحب من حرف</div>
-<div id="letterRing"><svg id="trace"></svg></div>
-<div class="actions">
-<button class="action gold" id="hintBtn">💡 مساعدة (5 نجوم)</button>
-<button class="action purple" id="revealBtn">🔓 كشف كلمة (22 نجمة)</button>
-<button class="action" id="clearBtn">مسح المسار</button>
-</div>
-<div id="message" aria-live="polite"></div>
-<section id="wheelPanel">
-<strong>🎡 عجلة الحظ اليومية</strong>
-<div class="pointer"></div>
-<div id="wheel"><div class="wlabels"><span>حظ أوفر</span><span>نجمة واحدة</span><span>3 نجوم</span><span>5 نجوم</span><span>10 نجوم</span></div></div>
-<button class="action green" id="spinBtn">لف العجلة</button>
-<div class="small" id="wheelTimer">لفة واحدة كل 24 ساعة</div>
-</section>
-<div class="small">يُحفظ تقدمك ونجومك تلقائياً على هذا الجهاز.</div>
-</main>
-<script>
-const levels=[
- {letters:["ك","ت","ا","ب","ر"],words:["كتاب","كاتب","ركب","ترك","كبر"]},
- {letters:["س","ل","ا","م","ن"],words:["سلام","سالم","لسان","نام","مال"]},
- {letters:["ق","ل","م","ا","ر"],words:["قلم","قمر","رقم","مرق","قال"]},
- {letters:["ن","ج","م","و","ر"],words:["نجوم","نجم","نور","نوم","جور"]},
- {letters:["ح","ر","و","ب","م"],words:["حرب","حبر","مرح","روح","بور"]}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101735">
+<title>مغامرة الكلمات</title>
+
+<style>
+:root {
+  --gold: #ffd76b;
+  --cyan: #7de8ef;
+  --panel: #17264ddd;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #fff;
+  font-family: Tahoma, Arial, sans-serif;
+  background: radial-gradient(
+    ellipse at 50% 5%,
+    #354d83 0,
+    #18264d 43%,
+    #090f25 100%
+  );
+  overflow-x: hidden;
+}
+
+body:before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(#fff9 1px, transparent 1px),
+    radial-gradient(#b8eaff99 1px, transparent 1px);
+  background-size: 57px 57px, 91px 91px;
+  background-position: 0 0, 24px 32px;
+  animation: stars 18s linear infinite;
+}
+
+@keyframes stars {
+  to {
+    background-position: 57px 57px, -67px 123px;
+  }
+}
+
+header {
+  max-width: 620px;
+  margin: auto;
+  padding: 20px 16px 8px;
+  text-align: center;
+}
+
+h1 {
+  margin: 5px 0;
+  color: var(--gold);
+  font-size: clamp(27px, 7vw, 38px);
+  text-shadow: 0 3px 16px #ffbf4b66;
+}
+
+.sub {
+  color: #c7d8f5;
+  font-size: 13px;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 14px auto;
+}
+
+.pill {
+  background: #18294fe8;
+  border: 1px solid #7eaddb66;
+  border-radius: 30px;
+  padding: 9px 14px;
+  box-shadow: 0 5px 18px #0003;
+  font-weight: bold;
+}
+
+.pill b {
+  color: var(--gold);
+}
+
+main {
+  width: min(94%, 520px);
+  margin: 0 auto 28px;
+}
+
+.panel {
+  background: linear-gradient(145deg, #1a3155ef, #111d3def);
+  border: 1px solid #8ac8ef55;
+  border-radius: 24px;
+  padding: 17px;
+  box-shadow:
+    0 16px 40px #0005,
+    inset 0 1px #ffffff18;
+  margin: 12px 0;
+}
+
+.levelline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #d9e9ff;
+  font-size: 14px;
+}
+
+.progress {
+  height: 8px;
+  background: #07132d;
+  border-radius: 20px;
+  margin: 10px 0 5px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #64e9ed, #ffe17b);
+  border-radius: 20px;
+  transition: width .3s;
+}
+
+.hint {
+  color: #bdd3f2;
+  text-align: center;
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+
+.wheel-wrap {
+  width: 220px;
+  height: 220px;
+  margin: 12px auto 16px;
+  position: relative;
+}
+
+.wheel {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 7px solid #ffe8a4;
+  box-shadow:
+    0 0 0 4px #9b6c31,
+    0 10px 30px #0008;
+  background: conic-gradient(
+    #df6c54 0 20%,
+    #325d9d 20% 40%,
+    #2c9b88 40% 60%,
+    #7454a8 60% 80%,
+    #b88732 80% 100%
+  );
+  transition: transform 3.5s cubic-bezier(.12,.72,.12,1);
+}
+
+.wheel:after {
+  content: "";
+  position: absolute;
+  inset: 43%;
+  background: #fff0;
+  border: 5px solid #ffe8a4;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #16254a;
+}
+
+.wheel-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wheel-labels span {
+  position: absolute;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 2px 3px #000;
+  left: 50%;
+  top: 50%;
+  width: 70px;
+  text-align: center;
+  transform-origin: center;
+}
+
+.pointer {
+  position: absolute;
+  z-index: 2;
+  left: calc(50% - 13px);
+  top: -12px;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-top: 27px solid #fff2a8;
+  filter: drop-shadow(0 3px 3px #000);
+}
+
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 15px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #17213b;
+  background: linear-gradient(180deg, #ffe89b, #eebc55);
+  box-shadow: 0 4px 0 #a8792c;
+  cursor: pointer;
+}
+
+button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #a8792c;
+}
+
+button.secondary {
+  background: linear-gradient(180deg, #9debf0, #52b9ce);
+  box-shadow: 0 4px 0 #267d94;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.wheel-actions,
+.tools {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.board {
+  position: relative;
+  width: min(78vw, 310px);
+  height: min(78vw, 310px);
+  margin: 5px auto 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #263f68 0,
+    #172b50 56%,
+    #0b1733 72%
+  );
+  border: 1px solid #9adff455;
+  box-shadow:
+    inset 0 0 35px #0008,
+    0 10px 28px #0004;
+  touch-action: none;
+}
+
+.letter {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 27px;
+  font-weight: bold;
+  color: #17213b;
+  background: linear-gradient(145deg, #fff3c4, #e7ad50);
+  border: 3px solid #fff1c2;
+  box-shadow:
+    0 5px 0 #98682c,
+    0 8px 15px #0006;
+  transform: translate(-50%, -50%);
+  user-select: none;
+  touch-action: none;
+}
+
+.letter.selected {
+  background: linear-gradient(145deg, #c4fbff, #65d7df);
+  box-shadow:
+    0 0 0 5px #6ce9ed55,
+    0 5px 0 #287f8d;
+}
+
+.current {
+  height: 39px;
+  text-align: center;
+  font-size: 25px;
+  letter-spacing: 5px;
+  color: #fff2ae;
+  font-weight: bold;
+  margin: 4px;
+}
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  min-height: 42px;
+}
+
+.word {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #29476b;
+  border: 1px solid #8bc8db66;
+  color: #e7f8ff;
+  font-weight: bold;
+}
+
+.word.new {
+  animation: pop .4s ease;
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.12);
+    background: #287c76;
+  }
+}
+
+.tools {
+  margin-top: 15px;
+}
+
+.message {
+  text-align: center;
+  min-height: 22px;
+  color: #a8f0df;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.levels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.level {
+  padding: 9px 0;
+  background: #20385c;
+  color: #e8f2ff;
+  box-shadow: none;
+  border: 1px solid #7295ba55;
+}
+
+.level.done {
+  background: #286c65;
+}
+
+.level.active {
+  outline: 2px solid var(--gold);
+}
+
+footer {
+  text-align: center;
+  color: #8da5c8;
+  font-size: 11px;
+  padding: 5px 12px 25px;
+}
+
+@media(max-width:370px) {
+  .letter {
+    width: 55px;
+    height: 55px;
+  }
+
+ 
+  .panel {
+    padding: 13px;
+  }
+
+  .wheel-wrap {
+    width: 200px;
+    height: 200px;
+  }
+}
+</style>
+const pools = [
+  { letters: ["ك","ت","ا","ب","ر"], words: ["كتاب","كاتب","ركب","ترك","كبر","برك","كرت","ربك"] },
+  { letters: ["س","ل","ا","م","ن"], words: ["سلام","سالم","لسان","نام","مال","نمل","لام","سمن"] },
+  { letters: ["ق","ل","م","ا","ر"], words: ["قلم","قمر","رقم","مرق","قال","رام","مال","مار"] },
+  { letters: ["ن","ج","م","و","ر"], words: ["نجوم","نجم","نور","نوم","جرم","مرج","رجم","موج"] },
+  { letters: ["ح","ر","و","ب","م"], words: ["حرب","حبر","مرح","روح","رمح","ربح","بور","مر"] },
+  { letters: ["ب","ح","ر","س","م"], words: ["بحر","سحر","رسم","مسح","حسم","حرس","سمح","مرح"] },
+  { letters: ["ج","م","ا","ل","ن"], words: ["جمال","جمل","مال","نام","نال","نمل","لام","منال"] },
+  { letters: ["و","ر","د","س","ع"], words: ["ورد","درس","وعد","عدو","سرد","وسع","رعد","دور"] },
+  { letters: ["ط","ر","ي","ق","م"], words: ["طريق","طير","طرق","مرق","ريم","رقم","طقم","قيم"] },
+  { letters: ["س","ف","ي","ن","ة"], words: ["سفن","نفس","سيف","نسي","فني","نفي","سنة","فين"] },
+  { letters: ["م","د","ا","ر","س"], words: ["درس","رسم","سرد","دسم","سمر","سدر","مرس","مدار"] },
+  { letters: ["أ","ق","ل","ا","م"], words: ["قلم","أمل","ألم","قال","مال","لام","مقال","أقام"] },
+  { letters: ["ز","ه","و","ر","ك"], words: ["زهر","زور","ركز","كور","حور","روز","كرز","هور"] },
+  { letters: ["ق","و","ا","ر","ب"], words: ["قارب","قبر","بار","ربا","قرب","بور","باق","راق"] },
+  { letters: ["ش","ع","ر","و","ا"], words: ["شعر","عرش","شرع","عشر","شراع","شوارع","روع","رعش"] },
+  { letters: ["ح","د","ي","ق","ة"], words: ["حدق","حقد","قيد","حق","دق","حي","قد","حد"] },
+  { letters: ["م","ف","ت","ا","ح"], words: ["فتح","حتم","فحم","حام","مات","فاح","تاح","مفتاح"] },
+  { letters: ["ن","ج","ا","ح","ك"], words: ["نجاح","نجح","حج","حاج","حان","كنا","حكا","كنج"] },
+  { letters: ["أ","ل","ع","ا","ب"], words: ["لعب","أمل","بلا","بال","عال","علم","لام","ألعاب"] },
+  { letters: ["ص","ب","ر","و","ن"], words: ["صبر","نصر","نصب","نور","صور","برص","صون","روب"] }
 ];
-const KEY="wordAdventureSaveV2",WHEEL="wordAdventureWheelV2";
-let save={level:0,stars:10,found:[]};
-try{const old=JSON.parse(localStorage.getItem(KEY)||"null");if(old)save={...save,...old}}catch(e){}
-save.level=Math.min(Math.max(0,save.level||0),levels.length-1);
-let path=[],active=false,done=false,positions=[];
-const $=id=>document.getElementById(id);
-const ring=$("letterRing"),answer=$("answer"),trace=$("trace");
-function persist(){localStorage.setItem(KEY,JSON.stringify(save))}
-function current(){return levels[save.level]}
-function stats(){$("stageStat").textContent=`المرحلة: ${save.level+1} / ${levels.length}`;$("starsStat").textContent=`⭐ النجوم: ${save.stars}`;$("progress").textContent=`الكلمات المكتشفة: ${save.found.length} / ${current().words.length}`}
-function message(t,color="#ffe9a7"){$("message").textContent=t;$("message").style.color=color}
-function draw(){
- ring.querySelectorAll(".node").forEach(n=>n.remove());trace.innerHTML="";
- const letters=current().letters,box=ring.getBoundingClientRect(),cx=box.width/2,cy=box.height/2,r=box.width*.37;
- positions=letters.map((letter,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/letters.length);return{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r}});
- letters.forEach((letter,i)=>{const n=document.createElement("div");n.className="node";n.textContent=letter;n.dataset.index=i;n.style.left=positions[i].x+"px";n.style.top=positions[i].y+"px";ring.appendChild(n)});
- $("found").innerHTML="";
- current().words.forEach(w=>{if(save.found.includes(w)){const el=document.createElement("span");el.className="word";el.textContent=w;$("found").appendChild(el)}});
- stats();renderPath();
-}
-function renderPath(){
- answer.textContent=path.length?path.map(i=>current().letters[i]).join(""):"ابدأ السحب من حرف";
- trace.setAttribute("viewBox",`0 0 ${ring.clientWidth} ${ring.clientHeight}`);trace.innerHTML="";
- if(path.length){const pts=path.map(i=>`${positions[i].x},${positions[i].y}`).join(" ");const p=document.createElementNS("http://www.w3.org/2000/svg","polyline");p.setAttribute("points",pts);p.setAttribute("fill","none");p.setAttribute("stroke","#fff1a8");p.setAttribute("stroke-width","8");p.setAttribute("stroke-linecap","round");p.setAttribute("stroke-linejoin","round");trace.appendChild(p)}
- ring.querySelectorAll(".node").forEach(n=>n.classList.toggle("used",path.includes(+n.dataset.index)));
-}
-function clearPath(){path=[];active=false;renderPath()}
-function pointIndex(e){const rect=ring.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;let best=-1,dist=Infinity;positions.forEach((p,i)=>{const d=Math.hypot(p.x-x,p.y-y);if(d<dist){dist=d;best=i}});return dist<36?best:-1}
-function addPoint(i){if(i<0||path.includes(i))return;path.push(i);renderPath()}
-ring.addEventListener("pointerdown",e=>{if(done)return;const i=pointIndex(e);if(i<0)return;active=true;path=[];addPoint(i);ring.setPointerCapture(e.pointerId)});
-ring.addEventListener("pointermove",e=>{if(!active)return;addPoint(pointIndex(e))});
-ring.addEventListener("pointerup",()=>{if(!active)return;active=false;submitPath()});
-ring.addEventListener("pointercancel",clearPath);
-function submitPath(){
- const word=path.map(i=>current().letters[i]).join("");
- if(current().words.includes(word)&&!save.found.includes(word)){
-  save.found.push(word);persist();message("رائع! اكتشفت كلمة جديدة ⭐","#9dffc1");path=[];stats();draw();
-  if(save.found.length===current().words.length){done=true;save.stars++;persist();stats();message("🏆 أكملت المرحلة! ربحت نجمة، جارٍ الانتقال...","#9dffc1");setTimeout(nextLevel,1300)}
- }else if(word.length){message(save.found.includes(word)?"هذه الكلمة مكتشفة مسبقاً":"ليست كلمة مطلوبة، جرّب مرة أخرى","#ffd18b");path=[];renderPath()}
-}
-function nextLevel(){done=false;if(save.level<levels.length-1){save.level++;save.found=[];persist();draw();message("🌟 بدأت مرحلة جديدة!")}else{message("🏆 أكملت كل المراحل المتاحة في هذه النسخة التجريبية!","#9dffc1")}}
-function missing(){return current().words.filter(w=>!save.found.includes(w))}
-$("clearBtn").onclick=()=>{clearPath();message("تم مسح المسار")};
-$("hintBtn").onclick=()=>{if(save.stars<5){message("نجومك لا تكفي للمساعدة");return}const w=missing()[0];if(!w){message("اكتشفت كل الكلمات!");return}save.stars-=5;persist();stats();message("تلميح: تبدأ إحدى الكلمات بحرف «"+w[0]+"» وتتكون من "+Array.from(w).length+" أحرف");};
-$("revealBtn").onclick=()=>{if(save.stars<22){message("تحتاج إلى 22 نجمة لكشف كلمة");return}const w=missing()[0];if(!w){message("اكتشفت كل الكلمات!");return}save.stars-=22;save.found.push(w);persist();draw();message("تم كشف كلمة: "+w);if(!missing().length){done=true;save.stars++;persist();stats();setTimeout(nextLevel,1300)}};
-function wheelState(){try{return JSON.parse(localStorage.getItem(WHEEL)||"null")}catch(e){return null}}
-function updateWheelTimer(){const s=wheelState(),left=s?86400000-(Date.now()-s.time):0;if(left<=0){$("wheelTimer").textContent="متاحة الآن!";$("spinBtn").disabled=false;$("spinBtn").style.opacity=1;return}const h=Math.floor(left/3600000),m=Math.floor(left%3600000/60000),sec=Math.floor(left%60000/1000);$("wheelTimer").textContent=`المحاولة التالية بعد ${h}س ${m}د ${sec}ث`;$("spinBtn").disabled=true;$("spinBtn").style.opacity=.5}
-$("spinBtn").onclick=()=>{if(wheelState()&&Date.now()-wheelState().time<86400000){updateWheelTimer();return}
- const roll=Math.random()*100;let prize=roll<30?0:roll<70?1:roll<80?3:roll<95?5:10;
- const sectors={0:0,1:1,3:3,5:4,10:2};const idx=sectors[prize];const base=360*5+(360-idx*72-36);$("wheel").style.transform=`rotate(${base}deg)`;
- localStorage.setItem(WHEEL,JSON.stringify({time:Date.now()}));if(prize)save.stars+=prize;persist();stats();message(prize?`مبروك! ربحت ${prize} نجوم 🎉`:"حظ أوفر في المرة القادمة!");updateWheelTimer()};
-draw();updateWheelTimer();setInterval(updateWheelTimer,1000);
-</script>
-</body>
-</html>
+
+// إنشاء 100 مرحلة تلقائياً
+const stages = [];
+
+pools.forEach((pool, poolIndex) => {
+  for (let variant = 0; variant < 5; variant++) {
+    const count = 5 + (variant % 4);
+    const rotatedWords = pool.words.map((_, i) =>
+      pool.words[(i + variant) % pool.words.length]
+    );
+
+    stages.push({
+      letters: [...pool.letters],
+      words: rotatedWords.slice(0, count),
+      title: "المرحلة " + (stages.length + 1)
+    });
+  }
+});
+
+console.log("عدد المراحل:", stages.length);
