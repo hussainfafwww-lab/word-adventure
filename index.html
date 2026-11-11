@@ -799,3 +799,299 @@ pools.forEach((pool, poolIndex) => {
 });
 
 console.log("عدد المراحل:", stages.length);
+
+    
+// ===== إعدادات اللعبة =====
+const $ = id => document.getElementById(id);
+
+let level = Number(localStorage.getItem("wa_level")) || 0;
+let stars = Number(localStorage.getItem("wa_stars"));
+if (!Number.isFinite(stars)) stars = 10;
+
+let foundWords = [];
+let selected = [];
+let pointerDown = false;
+let lastWheel = Number(localStorage.getItem("wa_wheel")) || 0;
+
+const shuffleArray = arr => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
+function saveGame() {
+  localStorage.setItem("wa_level", level);
+  localStorage.setItem("wa_stars", stars);
+  localStorage.setItem("wa_wheel", lastWheel);
+}
+
+function showMessage(text) {
+  $("message").textContent = text;
+}
+
+function updateStars() {
+  $("stars").textContent = "⭐ " + stars;
+}
+
+function currentStage() {
+  return stages[Math.min(level, stages.length - 1)];
+}
+
+function renderWords() {
+  const stage = currentStage();
+  $("words").innerHTML = "";
+
+  stage.words.forEach(word => {
+    const item = document.createElement("div");
+    item.className = "word-item";
+    item.textContent = foundWords.includes(word) ? word : "ـــــ";
+    if (foundWords.includes(word)) item.classList.add("found");
+    $("words").appendChild(item);
+  });
+
+  $("count").textContent = foundWords.length + " / " + stage.words.length;
+  $("bar").style.width =
+    (foundWords.length / stage.words.length * 100) + "%";
+}
+
+function renderLetters() {
+  const stage = currentStage();
+  const board = $("board");
+  board.innerHTML = "";
+
+  const letters = shuffleArray(stage.letters);
+  letters.forEach((letter, index) => {
+    const button = document.createElement("button");
+    button.className = "letter";
+    button.textContent = letter;
+    button.dataset.index = index;
+    button.type = "button";
+
+    button.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      pointerDown = true;
+      selected = [];
+      chooseLetter(button);
+    });
+
+    board.appendChild(button);
+  });
+}
+
+function chooseLetter(button) {
+  if (!pointerDown || selected.includes(button)) return;
+
+  selected.push(button);
+  button.classList.add("selected");
+  $("current").textContent = selected.map(b => b.textContent).join("");
+}
+
+function clearSelection() {
+  selected.forEach(button => button.classList.remove("selected"));
+  selected = [];
+  $("current").textContent = "";
+}
+
+function submitWord() {
+  if (!selected.length) return;
+
+  const word = selected.map(b => b.textContent).join("");
+  const stage = currentStage();
+
+  if (stage.words.includes(word) && !foundWords.includes(word)) {
+    foundWords.push(word);
+    stars += 1;
+    updateStars();
+    renderWords();
+    showMessage("أحسنت! ⭐ وجدت كلمة جديدة");
+    saveGame();
+
+    if (foundWords.length === stage.words.length) {
+      setTimeout(nextLevel, 900);
+    }
+  } else if (foundWords.includes(word)) {
+    showMessage("لقد وجدت هذه الكلمة من قبل!");
+  } else {
+    showMessage("حاول مرة أخرى!");
+  }
+
+  clearSelection();
+}
+
+document.addEventListener("pointermove", event => {
+  if (!pointerDown) return;
+
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  if (element && element.classList.contains("letter")) {
+    chooseLetter(element);
+  }
+});
+
+document.addEventListener("pointerup", () => {
+  if (!pointerDown) return;
+  pointerDown = false;
+  submitWord();
+});
+
+// ===== الانتقال بين المراحل =====
+function nextLevel() {
+  if (level < stages.length - 1) {
+    level++;
+    stars += 3;
+    foundWords = [];
+    saveGame();
+    startLevel();
+    showMessage("ممتاز! انتقلت إلى المرحلة التالية 🎉");
+  } else {
+    showMessage("رائع! أكملت جميع المراحل!");
+  }
+}
+
+function startLevel() {
+  const stage = currentStage();
+
+  $("levelNum").textContent = level + 1;
+  $("levelTitle").textContent = stage.title;
+  $("totalWords").textContent = stage.words.length;
+
+  foundWords = [];
+  clearSelection();
+  renderLetters();
+  renderWords();
+  updateStars();
+}
+
+// ===== خلط الحروف =====
+$("shuffle").addEventListener("click", () => {
+  renderLetters();
+  clearSelection();
+  showMessage("تم خلط الحروف!");
+});
+
+// ===== المساعدة =====
+$("hintBtn").addEventListener("click", () => {
+  if (stars < 5) {
+    showMessage("تحتاج إلى 5 نجوم للمساعدة.");
+    return;
+  }
+
+  const stage = currentStage();
+  const remaining = stage.words.filter(w => !foundWords.includes(w));
+
+  if (!remaining.length) return;
+
+  stars -= 5;
+  updateStars();
+  showMessage("تلميح: الكلمة تبدأ بحرف " + remaining[0][0]);
+  saveGame();
+});
+
+// ===== كشف كلمة =====
+$("revealBtn").addEventListener("click", () => {
+  if (stars < 22) {
+    showMessage("تحتاج إلى 22 نجمة لكشف كلمة.");
+    return;
+  }
+
+  const stage = currentStage();
+  const remaining = stage.words.filter(w => !foundWords.includes(w));
+
+  if (!remaining.length) return;
+
+  stars -= 22;
+  foundWords.push(remaining[0]);
+
+  updateStars();
+  renderWords();
+  saveGame();
+  showMessage("تم كشف كلمة: " + remaining[0]);
+
+  if (foundWords.length === stage.words.length) {
+    setTimeout(nextLevel, 900);
+  }
+});
+
+// ===== عجلة الحظ اليومية =====
+function updateWheelTimer() {
+  const day = 24 * 60 * 60 * 1000;
+  const remaining = day - (Date.now() - lastWheel);
+
+  if (remaining <= 0) {
+    $("wheelTimer").textContent = "العجلة جاهزة!";
+    $("spinBtn").disabled = false;
+    return;
+  }
+
+  const hours = Math.floor(remaining / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+
+  $("wheelTimer").textContent =
+    "متبقي " + hours + " ساعة و " + minutes + " دقيقة";
+
+  $("spinBtn").disabled = true;
+}
+
+$("spinBtn").addEventListener("click", () => {
+  const day = 24 * 60 * 60 * 1000;
+
+  if (Date.now() - lastWheel < day) {
+    showMessage("العجلة متاحة مرة واحدة كل يوم.");
+    return;
+  }
+
+  const prizes = [0, 1, 3, 5, 10];
+  const prize = prizes[Math.floor(Math.random() * prizes.length)];
+
+  stars += prize;
+  lastWheel = Date.now();
+
+  saveGame();
+  updateStars();
+  updateWheelTimer();
+
+  $("wheelMsg").textContent =
+    prize === 0 ? "حظ أوفر في المرة القادمة!" :
+    "مبروك! ربحت " + prize + " نجوم!";
+
+  showMessage($("wheelMsg").textContent);
+});
+
+// ===== قائمة المراحل =====
+function renderLevels() {
+  const container = $("levels");
+  container.innerHTML = "";
+
+  stages.forEach((stage, index) => {
+    const button = document.createElement("button");
+    button.className = "level-button";
+    button.textContent = index + 1;
+    button.disabled = index > level;
+
+    button.addEventListener("click", () => {
+      if (index <= level) {
+        level = index;
+        foundWords = [];
+        saveGame();
+        startLevel();
+        renderLevels();
+      }
+    });
+
+    container.appendChild(button);
+  });
+}
+
+// ===== تشغيل اللعبة =====
+startLevel();
+renderLevels();
+updateWheelTimer();
+
+setInterval(updateWheelTimer, 60000);
+
+// إغلاق ملف اللعبة
+</script>
+</body>
+</html>
